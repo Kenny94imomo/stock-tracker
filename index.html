@@ -1251,6 +1251,21 @@ function copyLatestCSV() {
 async function tryFetch() {
   const btn = document.getElementById('fetchBtn');
   btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> 抓取中...';
+
+  // 方式一：優先讀 GitHub Actions 每天自動生成的 data.json（最穩定，無 CORS）
+  try {
+    const res = await fetch('data.json?t=' + Date.now());
+    if (res.ok) {
+      const j = await res.json();
+      if (j.data && j.data.length) {
+        importRows(j.data.map(r => ({...r, date: j.date})), j.date);
+        btn.disabled = false; btn.innerHTML = '<i class="ti ti-refresh"></i> 自動抓取';
+        return;
+      }
+    }
+  } catch (e) { /* 沒有 data.json，往下嘗試直接抓 */ }
+
+  // 方式二：直接打 TWSE API（本機 file:// 開啟時可能成功，線上常被 CORS 擋）
   try {
     const [r1, r2] = await Promise.all([
       fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL'),
@@ -1276,7 +1291,7 @@ async function tryFetch() {
       .slice(0,50);
     importRows(rows, d);
   } catch(e) {
-    toast('自動抓取失敗（CORS），請手動上傳 CSV', false);
+    toast('自動抓取失敗，請手動上傳 CSV（或等 GitHub Actions 每日更新）', false);
     nav('import', null);
   } finally {
     btn.disabled = false;
@@ -1287,6 +1302,36 @@ async function tryFetch() {
 // Init
 updateTopbar();
 renderDash();
+
+// ── 雲端歷史同步（從 GitHub Actions 累積的 history.json 載入）──
+async function syncCloudHistory() {
+  try {
+    const res = await fetch('history.json?t=' + Date.now());
+    if (!res.ok) return; // 沒有 history.json（還沒跑過或本機開啟）
+    const h = await res.json();
+    if (!h.days) return;
+
+    // 雲端每一天的資料，併入本地（雲端為主，補上本地沒有的日期）
+    const localDates = new Set(allData.map(r => r.date));
+    let added = 0;
+    Object.entries(h.days).forEach(([date, rows]) => {
+      if (!localDates.has(date)) {
+        rows.forEach(r => allData.push({ ...r, date }));
+        added++;
+      }
+    });
+
+    if (added > 0) {
+      save();
+      updateTopbar();
+      const cur = document.querySelector('.nav-item.active');
+      const page = cur ? cur.getAttribute('onclick').match(/nav\('(\w+)'/)[1] : 'dashboard';
+      nav(page, cur);
+      toast(`已從雲端載入 ${added} 個交易日`);
+    }
+  } catch (e) { /* 靜默失敗，不影響本地使用 */ }
+}
+syncCloudHistory();
 </script>
 </body>
 </html>

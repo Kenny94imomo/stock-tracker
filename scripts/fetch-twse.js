@@ -73,16 +73,44 @@ async function main() {
   // 推算資料日期：STOCK_DAY_ALL 是前一交易日，用台北時區今天當標記
   const tpeDate = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
 
-  const out = {
+  const todayEntry = {
     date: tpeDate,
     updated: new Date().toISOString(),
     count: parsed.length,
     data: parsed,
   };
 
-  const outPath = path.join(__dirname, '..', 'data.json');
-  fs.writeFileSync(outPath, JSON.stringify(out, null, 2), 'utf8');
-  console.log(`✓ 已輸出 ${parsed.length} 筆 → data.json（標記日期 ${tpeDate}）`);
+  // 1) data.json：永遠是最新一天（向後相容，網頁仍可單獨讀）
+  const dataPath = path.join(__dirname, '..', 'data.json');
+  fs.writeFileSync(dataPath, JSON.stringify(todayEntry, null, 2), 'utf8');
+
+  // 2) history.json：累積歷史（跨裝置共享的雲端資料）
+  const historyPath = path.join(__dirname, '..', 'history.json');
+  let history = {};
+  try {
+    if (fs.existsSync(historyPath)) {
+      history = JSON.parse(fs.readFileSync(historyPath, 'utf8'));
+    }
+  } catch (e) {
+    console.log('  history.json 讀取失敗，重新建立:', e.message);
+    history = {};
+  }
+  // 以日期為 key，同一天會覆蓋更新（避免重複跑時累積髒資料）
+  history[tpeDate] = parsed;
+
+  // 只保留最近 120 個交易日，避免檔案無限長大
+  const keepDates = Object.keys(history).sort().slice(-120);
+  const trimmed = {};
+  keepDates.forEach(d => { trimmed[d] = history[d]; });
+
+  fs.writeFileSync(historyPath, JSON.stringify({
+    updated: new Date().toISOString(),
+    dates: keepDates,
+    days: trimmed,
+  }, null, 2), 'utf8');
+
+  console.log(`✓ data.json：最新 ${parsed.length} 筆（${tpeDate}）`);
+  console.log(`✓ history.json：累積 ${keepDates.length} 個交易日`);
   console.log(`  前3名：${parsed.slice(0,3).map(r => `${r.name} +${r.change}%`).join('、')}`);
 }
 
