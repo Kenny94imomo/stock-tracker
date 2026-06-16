@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>台股漲幅追蹤器</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css">
+<style>
+  :root {
+    --app-bg: #f5f5f7;
+    --sidebar-bg: #1c1c1e;
+    --card-bg: #ffffff;
+    --card-border: #e5e5ea;
+    --text-primary: #1c1c1e;
+    --text-secondary: #6e6e73;
+    --accent: #34c759;
+    --accent-bg: #e8f8ed;
+    --accent-text: #1a7a35;
+    --danger: #ff3b30;
+    --topbar-bg: #ffffff;
+    --topbar-border: #e5e5ea;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; background: var(--app-bg); }
+
+  .app-shell {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    grid-template-rows: 36px 1fr;
+    height: 100vh;
+    min-height: 600px;
+  }
+
+  /* Title bar */
+  .titlebar {
+    grid-column: 1 / -1;
+    background: var(--sidebar-bg);
+    display: flex; align-items: center; padding: 0 16px; gap: 8px;
+    user-select: none;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+  .dot-red { background: #ff5f57; }
+  .dot-yellow { background: #ffbd2e; }
+  .dot-green { background: #28c940; }
+  .titlebar-text { font-size: 12px; color: #ffffff50; margin: 0 auto; letter-spacing: 0.03em; }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--sidebar-bg);
+    padding: 16px 12px;
+    display: flex; flex-direction: column; gap: 2px;
+    overflow-y: auto;
+  }
+  .sidebar-logo {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px 16px;
+    border-bottom: 1px solid #ffffff15;
+    margin-bottom: 8px;
+  }
+  .logo-icon {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: #fff; flex-shrink: 0;
+  }
+  .logo-name { font-size: 14px; font-weight: 700; color: #fff; }
+  .logo-sub { font-size: 11px; color: #ffffff45; margin-top: 1px; }
+  .nav-section { font-size: 10px; color: #ffffff30; letter-spacing: 0.08em; font-weight: 700; padding: 12px 10px 4px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 8px; cursor: pointer;
+    color: #ebebf599; font-size: 13px; font-weight: 500;
+    border: none; background: none; width: 100%; text-align: left;
+    transition: background 0.12s;
+  }
+  .nav-item:hover { background: #ffffff12; color: #fff; }
+  .nav-item.active { background: #2c2c2e; color: #fff; }
+  .nav-item i { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+  .nav-badge {
+    margin-left: auto; background: var(--accent);
+    color: #fff; font-size: 10px; font-weight: 700;
+    padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center;
+  }
+
+  /* Main area */
+  .main-area { display: flex; flex-direction: column; overflow: hidden; background: var(--app-bg); }
+  .topbar {
+    background: var(--topbar-bg); border-bottom: 1px solid var(--topbar-border);
+    padding: 0 24px; height: 56px;
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .page-title { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+  .date-badge {
+    background: #f2f2f7; border-radius: 6px;
+    padding: 3px 10px; font-size: 12px; color: var(--text-secondary); font-weight: 500;
+  }
+  .topbar-right { display: flex; gap: 8px; align-items: center; }
+  .btn-primary {
+    background: var(--accent); color: #fff; border: none;
+    padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; gap: 6px;
+  }
+  .btn-primary:hover { background: #2dae4f; }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-secondary {
+    background: #f2f2f7; color: var(--text-primary); border: none;
+    padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    cursor: pointer; display: flex; align-items: center; gap: 6px;
+  }
+  .btn-secondary:hover { background: #e5e5ea; }
+
+  /* Content */
+  .content-area { flex: 1; overflow-y: auto; padding: 20px 24px; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* Metrics */
+  .metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .metric-card {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 12px; padding: 16px 18px;
+  }
+  .metric-label { font-size: 12px; color: var(--text-secondary); font-weight: 500; margin-bottom: 6px; }
+  .metric-value { font-size: 26px; font-weight: 700; color: var(--text-primary); line-height: 1; }
+  .metric-sub { font-size: 11px; color: var(--text-secondary); margin-top: 5px; }
+
+  /* Cards */
+  .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden; }
+  .card-header {
+    padding: 14px 16px; border-bottom: 1px solid var(--card-border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+  .card-meta { font-size: 12px; color: var(--text-secondary); }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    padding: 10px 14px; text-align: left;
+    font-size: 11px; font-weight: 700; color: var(--text-secondary);
+    border-bottom: 1px solid var(--card-border);
+    letter-spacing: 0.04em; background: #fafafa;
+    cursor: pointer; user-select: none; white-space: nowrap;
+  }
+  thead th:hover { color: var(--text-primary); }
+  thead th.right { text-align: right; }
+  tbody td { padding: 9px 14px; font-size: 13px; border-bottom: 1px solid #f2f2f7; vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: #f9f9fb; }
+
+  /* Pills & badges */
+  .change-pill {
+    display: inline-flex; align-items: center; gap: 2px;
+    background: var(--accent-bg); color: var(--accent-text);
+    font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 6px;
+  }
+  .sector-tag {
+    display: inline-flex; align-items: center;
+    font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px;
+    white-space: nowrap;
+  }
+  .rank-num {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+    background: #f2f2f7; color: var(--text-secondary);
+  }
+  .rank-num.gold { background: #fff3cd; color: #856404; }
+  .rank-num.silver { background: #e8e8e8; color: #444; }
+  .rank-num.bronze { background: #fde5d4; color: #8b4513; }
+  .stock-name { font-weight: 600; color: var(--text-primary); }
+  .stock-code { font-size: 11px; color: var(--text-secondary); margin-top: 1px; font-family: 'SF Mono', monospace; }
+  a.stock-link { text-decoration: none; color: inherit; display: block; }
+  a.stock-link:hover .stock-name { color: #0a84ff; text-decoration: underline; }
+
+  /* Dashboard layout */
+  .two-col { display: grid; grid-template-columns: 1fr 280px; gap: 16px; }
+  .heat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 14px; }
+  .heat-cell { border-radius: 8px; padding: 10px 12px; cursor: pointer; transition: opacity 0.15s; }
+  .heat-cell:hover { opacity: 0.75; }
+  .heat-cell-name { font-size: 10px; font-weight: 700; margin-bottom: 3px; }
+  .heat-cell-count { font-size: 22px; font-weight: 700; }
+
+  /* Search bar */
+  .search-row {
+    display: flex; gap: 8px; align-items: center; padding: 12px 14px;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .search-input {
+    flex: 1; height: 34px; border: 1px solid #d1d1d6;
+    border-radius: 8px; padding: 0 12px; font-size: 13px;
+    background: #f2f2f7; outline: none; color: var(--text-primary);
+  }
+  .search-input:focus { border-color: var(--accent); background: #fff; }
+  .filter-select {
+    height: 34px; border: 1px solid #d1d1d6; border-radius: 8px;
+    padding: 0 10px; font-size: 12px; background: #f2f2f7; color: var(--text-primary); outline: none;
+  }
+
+  /* Sector bars */
+  .sector-bars-wrap { padding: 8px 0; }
+  .sector-bar-row { display: flex; align-items: center; gap: 10px; padding: 7px 16px; border-bottom: 1px solid #f5f5f7; }
+  .sector-bar-row:last-child { border-bottom: none; }
+  .sector-bar-label { font-size: 12px; font-weight: 600; color: var(--text-primary); width: 110px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sector-bar-track { flex: 1; height: 6px; background: #f2f2f7; border-radius: 3px; overflow: hidden; }
+  .sector-bar-fill { height: 6px; border-radius: 3px; transition: width 0.4s; }
+  .sector-bar-count { font-size: 12px; color: var(--text-secondary); width: 24px; text-align: right; flex-shrink: 0; }
+  .sector-bar-avg { font-size: 12px; color: var(--accent-text); font-weight: 700; width: 50px; text-align: right; flex-shrink: 0; }
+
+  /* History */
+  .history-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 16px; border-bottom: 1px solid #f2f2f7; cursor: pointer;
+  }
+  .history-row:hover { background: #f9f9fb; }
+  .history-row:last-child { border-bottom: none; }
+  .history-date { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+  .history-meta { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+
+  /* Import */
+  .upload-zone {
+    border: 2px dashed #d1d1d6; border-radius: 12px; padding: 40px 24px;
+    text-align: center; cursor: pointer; margin-bottom: 16px; transition: all 0.15s;
+  }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: #f0faf3; }
+  .upload-icon { font-size: 36px; color: #aeaeb2; margin-bottom: 10px; }
+  .upload-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  .upload-sub { font-size: 13px; color: var(--text-secondary); }
+  .paste-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; }
+  .paste-label { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+  textarea.paste-input {
+    width: 100%; font-size: 12px; font-family: 'SF Mono', monospace;
+    border: 1px solid #d1d1d6; border-radius: 8px; padding: 10px;
+    background: #f9f9fb; color: var(--text-primary); resize: vertical; outline: none;
+    line-height: 1.7;
+  }
+  textarea.paste-input:focus { border-color: var(--accent); background: #fff; }
+  .paste-footer { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+  input[type="date"].date-input {
+    height: 36px; border: 1px solid #d1d1d6; border-radius: 8px;
+    padding: 0 10px; font-size: 13px; background: #f2f2f7; color: var(--text-primary); outline: none;
+  }
+  .copy-btn {
+    background: #f2f2f7; border: 1px solid #d1d1d6; color: var(--text-primary);
+    padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; gap: 5px;
+  }
+  .copy-btn:hover { background: #e5e5ea; }
+
+  /* Vol bar inline */
+  .vol-bar-bg { display: inline-block; width: 48px; height: 4px; background: #e5e5ea; border-radius: 2px; vertical-align: middle; margin-right: 5px; overflow: hidden; }
+  .vol-bar-fill { height: 4px; border-radius: 2px; background: #d1d1d6; }
+
+  .sector-inline { display: none; }
+  /* Responsive */
+  @media (max-width: 768px) {
+    .col-sector { display: none; }
+    .sector-inline { display: inline-flex; margin-top: 4px; }
+    .vol-bar-bg { display: none; }
+    tbody td { padding: 8px 10px; }
+    thead th { padding: 8px 10px; }
+    .app-shell { grid-template-columns: 1fr; grid-template-rows: 36px 56px 1fr; }
+    .sidebar { grid-row: 2; grid-column: 1; flex-direction: row; overflow-x: auto; padding: 0 8px; align-items: center; gap: 4px; }
+    .sidebar-logo, .nav-section { display: none; }
+    .nav-item { padding: 6px 10px; border-radius: 8px; font-size: 11px; white-space: nowrap; }
+    .main-area { grid-row: 3; }
+    .metrics-row { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+    .content-area { padding: 12px 14px; }
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: #1c1c1e; color: #fff; font-size: 13px; font-weight: 600;
+    padding: 10px 18px; border-radius: 10px;
+    opacity: 0; transform: translateY(8px);
+    transition: all 0.2s; pointer-events: none; z-index: 9999;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* Empty state */
+  .empty-state { text-align: center; padding: 48px 24px; color: #aeaeb2; }
+  .empty-state i { font-size: 36px; display: block; margin-bottom: 10px; }
+  .empty-state p { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <!-- Title bar -->
+  <div class="titlebar">
+    <div class="dot dot-red"></div>
+    <div class="dot dot-yellow"></div>
+    <div class="dot dot-green"></div>
+    <div class="titlebar-text">台股漲幅追蹤器 — StockTracker</div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon"><i class="ti ti-trending-up"></i></div>
+      <div>
+        <div class="logo-name">StockTracker</div>
+        <div class="logo-sub">資金流向追蹤</div>
+      </div>
+    </div>
+
+    <div class="nav-section">主要功能</div>
+    <button class="nav-item active" onclick="nav('dashboard',this)">
+      <i class="ti ti-layout-dashboard"></i> 總覽
+    </button>
+    <button class="nav-item" onclick="nav('rank',this)">
+      <i class="ti ti-list-numbers"></i> 漲幅排行
+      <span class="nav-badge" id="rankBadge">0</span>
+    </button>
+    <button class="nav-item" onclick="nav('sector',this)">
+      <i class="ti ti-chart-bar"></i> 產業分析
+    </button>
+    <button class="nav-item" onclick="nav('flow',this)">
+      <i class="ti ti-arrows-exchange"></i> 資金流向
+    </button>
+
+    <div class="nav-section">記錄</div>
+    <button class="nav-item" onclick="nav('history',this)">
+      <i class="ti ti-calendar"></i> 歷史記錄
+    </button>
+    <button class="nav-item" onclick="nav('import',this)">
+      <i class="ti ti-upload"></i> 匯入資料
+    </button>
+  </div>
+
+  <!-- Main -->
+  <div class="main-area">
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="page-title" id="pageTitle">總覽</span>
+        <span class="date-badge" id="pageMeta">—</span>
+      </div>
+      <div class="topbar-right">
+        <button class="copy-btn" id="copyCSVBtn" onclick="copyLatestCSV()" style="display:none">
+          <i class="ti ti-copy"></i> 複製 CSV
+        </button>
+        <button class="btn-secondary" onclick="nav('import',null)">
+          <i class="ti ti-upload"></i> 匯入
+        </button>
+        <button class="btn-primary" id="fetchBtn" onclick="tryFetch()">
+          <i class="ti ti-refresh"></i> 自動抓取
+        </button>
+      </div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- Dashboard -->
+      <div id="screen-dashboard" class="screen active">
+        <div class="metrics-row" id="dashMetrics"></div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">今日前 10 強</span>
+              <span class="card-meta" id="top10meta"></span>
+            </div>
+            <table>
+              <thead><tr>
+                <th style="width:36px">#</th>
+                <th>股票</th>
+                <th class="col-sector">產業</th>
+                <th class="right">收盤</th>
+                <th class="right">漲幅</th>
+              </tr></thead>
+              <tbody id="top10body"></tbody>
+            </table>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">產業熱力圖</span>
+              <span class="card-meta">點擊篩選</span>
+            </div>
+            <div class="heat-grid" id="heatGrid"></div>
+          </div>
+        </div>
+        <div class="card" id="streakCard" style="margin-top:16px"></div>
+      </div>
+
+      <!-- Rank -->
+      <div id="screen-rank" class="screen">
+        <div class="card">
+          <div class="search-row">
+            <i class="ti ti-search" style="color:#aeaeb2;font-size:16px"></i>
+            <input class="search-input" id="searchQ" type="text" placeholder="搜尋代號或名稱..." oninput="renderRank()">
+            <select class="filter-select" id="sectorQ" onchange="renderRank()">
+              <option value="">全部產業</option>
+            </select>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr>
+                <th style="width:40px">#</th>
+                <th onclick="sortRank('name')">股票</th>
+                <th onclick="sortRank('sector')" class="col-sector">產業別</th>
+                <th class="right" onclick="sortRank('price')">收盤價</th>
+                <th class="right" onclick="sortRank('change')">漲幅 ↓</th>
+                <th class="right" onclick="sortRank('volume')">成交量</th>
+              </tr></thead>
+              <tbody id="rankBody"></tbody>
+            </table>
+          </div>
+          <div id="rankEmpty" class="empty-state" style="display:none">
+            <i class="ti ti-search"></i><p>找不到符合條件的股票</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sector -->
+      <div id="screen-sector" class="screen">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">出現次數</span>
+              <div style="display:flex;gap:6px;align-items:center">
+                <button id="sectorModeCount" class="btn-secondary" style="padding:3px 10px;font-size:11px;background:#1c1c1e;color:#fff" onclick="setSectorMode('count')">檔數</button>
+                <button id="sectorModeVol" class="btn-secondary" style="padding:3px 10px;font-size:11px" onclick="setSectorMode('vol')">成交量</button>
+                <span class="card-meta" id="sectorDate"></span>
+              </div>
+            </div>
+            <div class="sector-bars-wrap" id="sectorBars"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">各產業代表股</span></div>
+            <table>
+              <thead><tr><th>產業</th><th>代表股</th><th class="right">漲幅</th></tr></thead>
+              <tbody id="leaderBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Flow -->
+      <div id="screen-flow" class="screen">
+        <div class="metrics-row" style="grid-template-columns:repeat(2,1fr)" id="flowCards"></div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">產業上榜檔數變化</span>
+            <span class="card-meta" id="flowMeta"></span>
+          </div>
+          <div style="padding:8px 16px;background:#f0f7ff;border-bottom:1px solid var(--card-border);font-size:12px;color:#0a5dc2">
+            <i class="ti ti-hand-click"></i> 點擊產業列可展開，查看哪些個股新進榜、續留、退出
+          </div>
+          <div style="overflow-x:auto">
+            <table id="flowTable">
+              <thead id="flowHead"></thead>
+              <tbody id="flowBody"></tbody>
+            </table>
+          </div>
+          <div id="flowEmpty" class="empty-state" style="display:none">
+            <i class="ti ti-arrows-exchange"></i>
+            <p>需要至少兩天的記錄才能比較資金流向<br>請持續每日匯入資料</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div id="screen-history" class="screen">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">歷史記錄</span>
+            <span class="card-meta" id="histCount"></span>
+          </div>
+          <div id="histBody"></div>
+          <div id="histEmpty" class="empty-state" style="display:none">
+            <i class="ti ti-calendar"></i><p>尚無歷史記錄，請先匯入資料</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Import -->
+      <div id="screen-import" class="screen">
+        <div class="upload-zone" id="dropZone"
+          onclick="document.getElementById('fileIn').click()"
+          ondragover="event.preventDefault();this.classList.add('drag')"
+          ondragleave="this.classList.remove('drag')"
+          ondrop="handleDrop(event)">
+          <div class="upload-icon"><i class="ti ti-file-spreadsheet"></i></div>
+          <div class="upload-title">點擊或拖曳上傳 CSV 檔案</div>
+          <div class="upload-sub">支援格式：代號, 名稱, 產業別, 收盤價, 漲跌%, 成交量(張)</div>
+        </div>
+        <input type="file" id="fileIn" accept=".csv" style="display:none" onchange="handleFile(this.files[0])">
+
+        <div class="paste-card">
+          <div class="paste-label">或直接貼上 CSV 內容</div>
+          <textarea class="paste-input" id="csvPaste" rows="6"
+            placeholder="代號,名稱,產業別,收盤價,漲跌%,成交量&#10;2330,台積電,半導體業,910,3.52,45231&#10;2317,鴻海,電腦及週邊設備業,201,2.81,38100"></textarea>
+          <div class="paste-footer">
+            <input type="date" class="date-input" id="importDate">
+            <button class="btn-primary" onclick="importCSV()">
+              <i class="ti ti-check"></i> 確認匯入
+            </button>
+            <span id="importMsg" style="font-size:13px;font-weight:600"></span>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;background:#fff;border:1px solid var(--card-border);border-radius:12px;padding:16px">
+          <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:10px">CSV 欄位說明</div>
+          <table style="font-size:12px;color:var(--text-secondary)">
+            <tr><td style="padding:4px 16px 4px 0;font-family:monospace;color:#3a3a3c;font-weight:600">代號</td><td>股票代碼，如 2330</td></tr>
+            <tr><td style="padding:4px 16px 4px 0;font-family:monospace;color:#3a3a3c;font-weight:600">名稱</td><td>公司名稱</td></tr>
+            <tr><td style="padding:4px 16px 4px 0;font-family:monospace;color:#3a3a3c;font-weight:600">產業別</td><td>TWSE 類股名稱，如 半導體業</td></tr>
+            <tr><td style="padding:4px 16px 4px 0;font-family:monospace;color:#3a3a3c;font-weight:600">收盤價</td><td>當日收盤價（元）</td></tr>
+            <tr><td style="padding:4px 16px 4px 0;font-family:monospace;color:#3a3a3c;font-weight:600">漲跌%</td><td>漲幅百分比，如 3.52</td></tr>
+            <tr><td style="padding:4px 16px 4px 0;font-family:monospace;color:#3a3a3c;font-weight:600">成交量</td><td>成交張數</td></tr>
+          </table>
+        </div>
+
+        <div style="margin-top:16px;background:#fff;border:1px solid var(--card-border);border-radius:12px;padding:16px">
+          <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:4px">資料備份</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">資料存在瀏覽器內，清除快取會遺失。建議定期匯出備份。</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-primary" onclick="exportBackup()" style="background:#0a84ff">
+              <i class="ti ti-download"></i> 匯出備份 (JSON)
+            </button>
+            <button class="btn-secondary" onclick="document.getElementById('backupIn').click()">
+              <i class="ti ti-upload"></i> 還原備份
+            </button>
+            <input type="file" id="backupIn" accept=".json" style="display:none" onchange="importBackup(this.files[0])">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SC = {
+  '建材營造':     ['#ff9f0a','#fff5e0','#7a4a00'],
+  '電子零組件業': ['#0a84ff','#e5f1ff','#003d7a'],
+  '光電業':       ['#5e5ce6','#eeeeff','#2a2880'],
+  '生技醫療業':   ['#30d158','#e5faec','#145a25'],
+  '資訊服務業':   ['#636366','#f2f2f7','#2c2c2e'],
+  '半導體業':     ['#34c759','#e8f8ed','#1a5c2a'],
+  '其他電子業':   ['#ff6b35','#fff0eb','#7a2e0d'],
+  '電機機械':     ['#ff9500','#fff4e0','#7a4700'],
+  '金融保險業':   ['#ffd60a','#fffbe0','#7a6500'],
+  '貿易百貨':     ['#ac8e68','#f5f0eb','#4a3a25'],
+  '電腦及週邊設備業':['#32ade6','#e5f7fd','#0a4d6e'],
+  '紡織纖維':     ['#ff2d55','#ffe5ea','#7a0d20'],
+  '橡膠工業':     ['#ff3b30','#ffe5e4','#7a1410'],
+  '太陽能':       ['#ffcc00','#fffbe5','#7a6000'],
+  '航運業':       ['#0071e3','#e3f0ff','#003d7a'],
+  '鋼鐵工業':     ['#888780','#f1efe8','#444441'],
+  '化學工業':     ['#28cd41','#e5faea','#0f5520'],
+  '油電燃氣業':   ['#ff8c00','#fff3e0','#7a4200'],
+  '其他':         ['#8e8e93','#f2f2f7','#3a3a3c'],
+};
+
+function getColor(sector){ return SC[sector] || ['#8e8e93','#f2f2f7','#3a3a3c']; }
+function stockLink(code, inner){ return `<a class="stock-link" href="https://tw.stock.yahoo.com/quote/${code}" target="_blank" rel="noopener">${inner}</a>`; }
+
+const PAGES = {dashboard:'總覽',rank:'漲幅排行',sector:'產業分析',flow:'資金流向',history:'歷史記錄',import:'匯入資料'};
+let allData = [];
+try { allData = JSON.parse(localStorage.getItem('twse_tracker_v5') || '[]'); } catch(e){}
+
+const today = new Date().toISOString().slice(0,10);
+document.getElementById('importDate').value = today;
+
+// Seed data (2026-06-10)
+const SEED = [
+  {code:'2348',name:'海悅',sector:'建材營造',price:'78.10',change:'10.00',volume:'5857',date:'2026-06-10'},
+  {code:'2509',name:'全坤建',sector:'建材營造',price:'14.30',change:'10.00',volume:'846',date:'2026-06-10'},
+  {code:'4113',name:'聯上',sector:'電子零組件業',price:'16.50',change:'10.00',volume:'3354',date:'2026-06-10'},
+  {code:'7788',name:'欣巴巴',sector:'其他',price:'46.25',change:'9.99',volume:'572',date:'2026-06-10'},
+  {code:'3441',name:'聯一光',sector:'光電業',price:'65.00',change:'9.98',volume:'3619',date:'2026-06-10'},
+  {code:'2524',name:'京城',sector:'建材營造',price:'37.50',change:'9.97',volume:'470',date:'2026-06-10'},
+  {code:'3362',name:'先進光',sector:'光電業',price:'171.00',change:'9.97',volume:'9913',date:'2026-06-10'},
+  {code:'2413',name:'環科',sector:'電子零組件業',price:'59.60',change:'9.96',volume:'21160',date:'2026-06-10'},
+  {code:'3557',name:'嘉威',sector:'其他電子業',price:'25.40',change:'9.96',volume:'142',date:'2026-06-10'},
+  {code:'8444',name:'綠河-KY',sector:'其他',price:'4.97',change:'9.96',volume:'138',date:'2026-06-10'},
+  {code:'3285',name:'微端',sector:'電子零組件業',price:'34.25',change:'9.95',volume:'479',date:'2026-06-10'},
+  {code:'4556',name:'旭然',sector:'其他',price:'55.30',change:'9.94',volume:'473',date:'2026-06-10'},
+  {code:'5508',name:'永信建',sector:'建材營造',price:'57.50',change:'9.94',volume:'2885',date:'2026-06-10'},
+  {code:'6169',name:'昱泉',sector:'資訊服務業',price:'15.50',change:'9.93',volume:'171',date:'2026-06-10'},
+  {code:'6180',name:'橘子',sector:'資訊服務業',price:'47.05',change:'9.93',volume:'2457',date:'2026-06-10'},
+  {code:'2501',name:'國建',sector:'建材營造',price:'26.60',change:'9.92',volume:'21632',date:'2026-06-10'},
+  {code:'5345',name:'薪灣',sector:'其他',price:'32.15',change:'9.91',volume:'498',date:'2026-06-10'},
+  {code:'2537',name:'聯上發',sector:'建材營造',price:'11.10',change:'9.90',volume:'9520',date:'2026-06-10'},
+  {code:'3183',name:'網龍',sector:'資訊服務業',price:'30.55',change:'9.89',volume:'864',date:'2026-06-10'},
+  {code:'8906',name:'花王',sector:'貿易百貨',price:'26.10',change:'9.89',volume:'195',date:'2026-06-10'},
+  {code:'2520',name:'冠德',sector:'建材營造',price:'35.60',change:'9.88',volume:'9780',date:'2026-06-10'},
+  {code:'8021',name:'尖點',sector:'電子零組件業',price:'556.00',change:'9.88',volume:'17620',date:'2026-06-10'},
+  {code:'4166',name:'友霖',sector:'生技醫療業',price:'25.60',change:'9.87',volume:'3553',date:'2026-06-10'},
+  {code:'6244',name:'茂迪',sector:'太陽能',price:'31.20',change:'9.86',volume:'20273',date:'2026-06-10'},
+  {code:'3550',name:'聯穎',sector:'電子零組件業',price:'28.45',change:'9.85',volume:'19587',date:'2026-06-10'},
+  {code:'3152',name:'璟德',sector:'電子零組件業',price:'206.50',change:'9.84',volume:'3304',date:'2026-06-10'},
+  {code:'6207',name:'雷科',sector:'電子零組件業',price:'134.50',change:'9.80',volume:'12062',date:'2026-06-10'},
+  {code:'1438',name:'三地開發',sector:'紡織纖維',price:'21.90',change:'9.77',volume:'266',date:'2026-06-10'},
+  {code:'5521',name:'工信',sector:'建材營造',price:'11.25',change:'9.76',volume:'10131',date:'2026-06-10'},
+  {code:'3288',name:'點晶',sector:'半導體業',price:'25.55',change:'9.66',volume:'267',date:'2026-06-10'},
+  {code:'4973',name:'廣穎',sector:'電腦及週邊設備業',price:'193.00',change:'9.66',volume:'4674',date:'2026-06-10'},
+  {code:'4946',name:'辣椒',sector:'電子零組件業',price:'114.00',change:'9.62',volume:'212',date:'2026-06-10'},
+  {code:'3313',name:'藥威',sector:'生技醫療業',price:'12.55',change:'9.61',volume:'1170',date:'2026-06-10'},
+  {code:'9910',name:'豐泰',sector:'橡膠工業',price:'94.00',change:'8.92',volume:'15463',date:'2026-06-10'},
+  {code:'2540',name:'愛山林',sector:'建材營造',price:'55.30',change:'8.64',volume:'4164',date:'2026-06-10'},
+  {code:'4582',name:'聯恒-創',sector:'其他電子業',price:'27.70',change:'8.63',volume:'1163',date:'2026-06-10'},
+  {code:'3188',name:'鑫龍騰',sector:'電子零組件業',price:'25.95',change:'8.58',volume:'2383',date:'2026-06-10'},
+  {code:'4139',name:'馬光-KY',sector:'生技醫療業',price:'24.75',change:'8.55',volume:'38',date:'2026-06-10'},
+  {code:'2724',name:'藝舍-KY',sector:'貿易百貨',price:'13.50',change:'8.43',volume:'56',date:'2026-06-10'},
+  {code:'7722',name:'LINEPAY',sector:'金融保險業',price:'347.00',change:'8.27',volume:'1532',date:'2026-06-10'},
+  {code:'3593',name:'力銘',sector:'電子零組件業',price:'17.80',change:'8.21',volume:'44',date:'2026-06-10'},
+  {code:'5522',name:'遠雄',sector:'建材營造',price:'82.20',change:'8.16',volume:'5184',date:'2026-06-10'},
+  {code:'2243',name:'宏旭-KY',sector:'電機機械',price:'30.80',change:'8.07',volume:'2117',date:'2026-06-10'},
+  {code:'4402',name:'郡都開發',sector:'建材營造',price:'17.40',change:'8.07',volume:'470',date:'2026-06-10'},
+  {code:'4513',name:'福裕',sector:'電機機械',price:'16.40',change:'7.89',volume:'2095',date:'2026-06-10'},
+  {code:'5534',name:'長虹',sector:'建材營造',price:'83.50',change:'7.46',volume:'7301',date:'2026-06-10'},
+  {code:'5348',name:'正能量智能',sector:'電子零組件業',price:'15.90',change:'7.43',volume:'2',date:'2026-06-10'},
+  {code:'7749',name:'意騰-KY',sector:'電子零組件業',price:'523.00',change:'7.28',volume:'2768',date:'2026-06-10'},
+  {code:'3717',name:'奕力',sector:'其他電子業',price:'32.15',change:'7.10',volume:'498',date:'2026-06-10'},
+  {code:'3315',name:'鑫創',sector:'電子零組件業',price:'27.70',change:'7.05',volume:'1000',date:'2026-06-10'},
+  {code:'2483',name:'百容',sector:'電子零組件業',price:'34.65',change:'10.00',volume:'5761',date:'2026-06-11'},
+  {code:'3441',name:'聯一光',sector:'光電業',price:'71.50',change:'10.00',volume:'21798',date:'2026-06-11'},
+  {code:'3532',name:'台勝科',sector:'半導體業',price:'297.00',change:'10.00',volume:'1060',date:'2026-06-11'},
+  {code:'5468',name:'凱鈺',sector:'半導體業',price:'19.80',change:'10.00',volume:'466',date:'2026-06-11'},
+  {code:'6174',name:'安碁',sector:'資訊服務業',price:'51.70',change:'10.00',volume:'8215',date:'2026-06-11'},
+  {code:'6241',name:'鑫永洋',sector:'其他',price:'12.65',change:'10.00',volume:'622',date:'2026-06-11'},
+  {code:'5227',name:'立凱-KY',sector:'化學工業',price:'28.10',change:'9.98',volume:'806',date:'2026-06-11'},
+  {code:'6259',name:'百徽',sector:'半導體業',price:'29.75',change:'9.98',volume:'4581',date:'2026-06-11'},
+  {code:'6613',name:'朋億',sector:'電子零組件業',price:'286.50',change:'9.98',volume:'1629',date:'2026-06-11'},
+  {code:'8150',name:'南茂',sector:'半導體業',price:'97.10',change:'9.97',volume:'64816',date:'2026-06-11'},
+  {code:'5410',name:'國眾',sector:'資訊服務業',price:'44.15',change:'9.96',volume:'6459',date:'2026-06-11'},
+  {code:'2425',name:'承啟',sector:'電腦及週邊設備業',price:'36.45',change:'9.95',volume:'1430',date:'2026-06-11'},
+  {code:'4556',name:'旭然',sector:'其他',price:'60.80',change:'9.95',volume:'962',date:'2026-06-11'},
+  {code:'5345',name:'馥鴻',sector:'其他',price:'35.35',change:'9.95',volume:'695',date:'2026-06-11'},
+  {code:'6156',name:'松上',sector:'電子零組件業',price:'20.45',change:'9.95',volume:'4357',date:'2026-06-11'},
+  {code:'3236',name:'千如',sector:'電子零組件業',price:'57.50',change:'9.94',volume:'19438',date:'2026-06-11'},
+  {code:'2355',name:'敬鵬',sector:'電子零組件業',price:'58.70',change:'9.93',volume:'28067',date:'2026-06-11'},
+  {code:'3285',name:'微端',sector:'電子零組件業',price:'37.65',change:'9.93',volume:'316',date:'2026-06-11'},
+  {code:'6155',name:'鈞寶',sector:'電子零組件業',price:'84.10',change:'9.93',volume:'27622',date:'2026-06-11'},
+  {code:'8042',name:'金山電',sector:'電子零組件業',price:'155.00',change:'9.93',volume:'17873',date:'2026-06-11'},
+  {code:'1714',name:'和桐',sector:'化學工業',price:'14.40',change:'9.92',volume:'98249',date:'2026-06-11'},
+  {code:'6465',name:'威潤',sector:'其他電子業',price:'55.40',change:'9.92',volume:'965',date:'2026-06-11'},
+  {code:'3090',name:'日電貿',sector:'電子通路業',price:'233.00',change:'9.91',volume:'26159',date:'2026-06-11'},
+  {code:'6834',name:'天二科技',sector:'電子零組件業',price:'76.50',change:'9.91',volume:'8444',date:'2026-06-11'},
+  {code:'8071',name:'能率網通',sector:'通信網路業',price:'24.95',change:'9.91',volume:'9566',date:'2026-06-11'},
+  {code:'2243',name:'宏旭-KY',sector:'電機機械',price:'33.85',change:'9.90',volume:'4366',date:'2026-06-11'},
+  {code:'2406',name:'國碩',sector:'光電業',price:'39.40',change:'9.90',volume:'67316',date:'2026-06-11'},
+  {code:'4168',name:'醣聯',sector:'生技醫療業',price:'27.75',change:'9.90',volume:'2815',date:'2026-06-11'},
+  {code:'6239',name:'力成',sector:'半導體業',price:'333.00',change:'9.90',volume:'16948',date:'2026-06-11'},
+  {code:'3296',name:'勝德',sector:'電子零組件業',price:'24.45',change:'9.89',volume:'648',date:'2026-06-11'},
+  {code:'5498',name:'凱崴',sector:'電子零組件業',price:'66.70',change:'9.88',volume:'11647',date:'2026-06-11'},
+  {code:'8182',name:'加高',sector:'電子零組件業',price:'54.50',change:'9.88',volume:'16090',date:'2026-06-11'},
+  {code:'3555',name:'博士旺',sector:'其他電子業',price:'206.00',change:'9.87',volume:'247',date:'2026-06-11'},
+  {code:'4807',name:'日成-KY',sector:'貿易百貨',price:'37.30',change:'9.87',volume:'471',date:'2026-06-11'},
+  {code:'6517',name:'保勝光學',sector:'光電業',price:'69.00',change:'9.87',volume:'2194',date:'2026-06-11'},
+  {code:'4952',name:'凌通',sector:'半導體業',price:'51.80',change:'9.86',volume:'1510',date:'2026-06-11'},
+  {code:'3290',name:'東浦',sector:'電子零組件業',price:'63.60',change:'9.84',volume:'7063',date:'2026-06-11'},
+  {code:'3557',name:'嘉威',sector:'其他電子業',price:'27.90',change:'9.84',volume:'279',date:'2026-06-11'},
+  {code:'6173',name:'信昌電',sector:'電子零組件業',price:'251.50',change:'9.83',volume:'38561',date:'2026-06-11'},
+  {code:'1438',name:'三地開發',sector:'紡織纖維',price:'24.05',change:'9.82',volume:'603',date:'2026-06-11'},
+  {code:'7828',name:'創新服務',sector:'資訊服務業',price:'1790.00',change:'9.82',volume:'558',date:'2026-06-11'},
+  {code:'1785',name:'光洋科',sector:'化學工業',price:'145.50',change:'9.81',volume:'31078',date:'2026-06-11'},
+  {code:'3042',name:'晶技',sector:'電子零組件業',price:'235.00',change:'9.81',volume:'46454',date:'2026-06-11'},
+  {code:'6419',name:'京晨科',sector:'電腦及週邊設備業',price:'140.00',change:'9.80',volume:'172',date:'2026-06-11'},
+  {code:'4806',name:'桂田文創',sector:'文化創意業',price:'10.90',change:'9.66',volume:'125',date:'2026-06-11'},
+  {code:'5457',name:'宣德',sector:'電子零組件業',price:'32.35',change:'9.66',volume:'1632',date:'2026-06-11'},
+  {code:'2414',name:'精技',sector:'電子通路業',price:'63.00',change:'9.57',volume:'3168',date:'2026-06-11'},
+  {code:'3685',name:'元創精密',sector:'電機機械',price:'30.75',change:'8.85',volume:'926',date:'2026-06-11'},
+  {code:'8488',name:'吉源-KY',sector:'貿易百貨',price:'10.50',change:'8.70',volume:'77',date:'2026-06-11'},
+  {code:'2401',name:'凌陽',sector:'半導體業',price:'27.55',change:'8.68',volume:'9316',date:'2026-06-11'},
+  {code:'00910',name:'第一金太空衛星',sector:'ETF',price:'75.25',change:'11.48',volume:'14846',date:'2026-06-12'},
+  {code:'2302',name:'麗正',sector:'半導體業',price:'34.65',change:'10.00',volume:'1715',date:'2026-06-12'},
+  {code:'2408',name:'南亞科',sector:'半導體業',price:'374.00',change:'10.00',volume:'92167',date:'2026-06-12'},
+  {code:'2455',name:'全新',sector:'光電業',price:'352.00',change:'10.00',volume:'12160',date:'2026-06-12'},
+  {code:'3576',name:'聯合再生',sector:'太陽能',price:'19.80',change:'10.00',volume:'74072',date:'2026-06-12'},
+  {code:'4534',name:'慶騰',sector:'電機機械',price:'33.00',change:'10.00',volume:'3650',date:'2026-06-12'},
+  {code:'4542',name:'科嶠',sector:'電機機械',price:'335.50',change:'10.00',volume:'472',date:'2026-06-12'},
+  {code:'6202',name:'盛群',sector:'半導體業',price:'59.40',change:'10.00',volume:'9347',date:'2026-06-12'},
+  {code:'6208',name:'日揚',sector:'半導體業',price:'86.90',change:'10.00',volume:'797',date:'2026-06-12'},
+  {code:'8042',name:'金山電',sector:'電子零組件業',price:'170.50',change:'10.00',volume:'2034',date:'2026-06-12'},
+  {code:'8906',name:'花王',sector:'貿易百貨',price:'27.50',change:'10.00',volume:'167',date:'2026-06-12'},
+  {code:'6515',name:'穎崴',sector:'半導體業',price:'9590.00',change:'9.98',volume:'413',date:'2026-06-12'},
+  {code:'4939',name:'亞電',sector:'電子零組件業',price:'66.20',change:'9.97',volume:'12880',date:'2026-06-12'},
+  {code:'6139',name:'亞翔',sector:'其他',price:'805.00',change:'9.97',volume:'5497',date:'2026-06-12'},
+  {code:'2483',name:'百容',sector:'電子零組件業',price:'38.10',change:'9.96',volume:'3327',date:'2026-06-12'},
+  {code:'3285',name:'微端',sector:'電子零組件業',price:'41.40',change:'9.96',volume:'211',date:'2026-06-12'},
+  {code:'5227',name:'立凱-KY',sector:'化學工業',price:'30.90',change:'9.96',volume:'348',date:'2026-06-12'},
+  {code:'3152',name:'璟德',sector:'電子零組件業',price:'221.00',change:'9.95',volume:'4213',date:'2026-06-12'},
+  {code:'4722',name:'國精化',sector:'化學工業',price:'226.50',change:'9.95',volume:'1681',date:'2026-06-12'},
+  {code:'4923',name:'力士',sector:'電子零組件業',price:'47.50',change:'9.95',volume:'1334',date:'2026-06-12'},
+  {code:'6173',name:'信昌電',sector:'電子零組件業',price:'276.50',change:'9.94',volume:'20278',date:'2026-06-12'},
+  {code:'3021',name:'鴻名',sector:'電子零組件業',price:'29.90',change:'9.93',volume:'230',date:'2026-06-12'},
+  {code:'3026',name:'禾伸堂',sector:'電子零組件業',price:'764.00',change:'9.93',volume:'2386',date:'2026-06-12'},
+  {code:'3532',name:'台勝科',sector:'半導體業',price:'326.50',change:'9.93',volume:'11907',date:'2026-06-12'},
+  {code:'6409',name:'旭隼',sector:'其他電子業',price:'930.00',change:'9.93',volume:'1519',date:'2026-06-12'},
+  {code:'6465',name:'威潤',sector:'其他電子業',price:'60.90',change:'9.93',volume:'1385',date:'2026-06-12'},
+  {code:'6834',name:'天二科技',sector:'電子零組件業',price:'84.10',change:'9.93',volume:'12907',date:'2026-06-12'},
+  {code:'8039',name:'台虹',sector:'電子零組件業',price:'149.50',change:'9.93',volume:'17650',date:'2026-06-12'},
+  {code:'4807',name:'日成-KY',sector:'貿易百貨',price:'41.00',change:'9.92',volume:'551',date:'2026-06-12'},
+  {code:'6449',name:'鈺邦',sector:'電子零組件業',price:'421.00',change:'9.92',volume:'1005',date:'2026-06-12'},
+  {code:'6488',name:'環球晶',sector:'半導體業',price:'864.00',change:'9.92',volume:'1477',date:'2026-06-12'},
+  {code:'1303',name:'南亞',sector:'塑膠工業',price:'106.50',change:'9.91',volume:'53386',date:'2026-06-12'},
+  {code:'1605',name:'華新',sector:'電器電纜',price:'37.70',change:'9.91',volume:'56405',date:'2026-06-12'},
+  {code:'2380',name:'虹光',sector:'電腦及週邊設備業',price:'6.43',change:'9.91',volume:'1630',date:'2026-06-12'},
+  {code:'3094',name:'聯傑',sector:'半導體業',price:'32.15',change:'9.91',volume:'1762',date:'2026-06-12'},
+  {code:'3236',name:'千如',sector:'電子零組件業',price:'63.20',change:'9.91',volume:'6606',date:'2026-06-12'},
+  {code:'6205',name:'詮欣',sector:'電子零組件業',price:'86.50',change:'9.91',volume:'3274',date:'2026-06-12'},
+  {code:'6271',name:'同欣電',sector:'半導體業',price:'238.50',change:'9.91',volume:'5702',date:'2026-06-12'},
+  {code:'2243',name:'宏旭-KY',sector:'電機機械',price:'37.20',change:'9.90',volume:'3736',date:'2026-06-12'},
+  {code:'2344',name:'華邦電',sector:'半導體業',price:'172.00',change:'9.90',volume:'210145',date:'2026-06-12'},
+  {code:'2402',name:'毅嘉',sector:'電子零組件業',price:'66.60',change:'9.90',volume:'9313',date:'2026-06-12'},
+  {code:'5425',name:'台半',sector:'半導體業',price:'101.00',change:'9.90',volume:'24682',date:'2026-06-12'},
+  {code:'6278',name:'台表科',sector:'電子零組件業',price:'211.00',change:'9.90',volume:'12197',date:'2026-06-12'},
+  {code:'3303',name:'岱稜',sector:'其他電子業',price:'58.90',change:'9.89',volume:'3675',date:'2026-06-12'},
+  {code:'3652',name:'精聯',sector:'電腦及週邊設備業',price:'35.55',change:'9.89',volume:'489',date:'2026-06-12'},
+  {code:'5457',name:'宣德',sector:'電子零組件業',price:'35.55',change:'9.89',volume:'2162',date:'2026-06-12'},
+  {code:'6182',name:'合晶',sector:'半導體業',price:'88.90',change:'9.89',volume:'8971',date:'2026-06-12'},
+  {code:'2484',name:'希華',sector:'電子零組件業',price:'66.70',change:'9.88',volume:'55185',date:'2026-06-12'},
+  {code:'6241',name:'鑫永洋',sector:'其他',price:'13.90',change:'9.88',volume:'2056',date:'2026-06-12'},
+  {code:'6269',name:'台郡',sector:'電子零組件業',price:'72.30',change:'9.88',volume:'8090',date:'2026-06-12'},
+];
+if (!allData.length) { allData = SEED; save(); }
+
+function save() { try { localStorage.setItem('twse_tracker_v5', JSON.stringify(allData)); } catch(e){} }
+
+// ── 備份 ──
+let allNotes = {};
+try { allNotes = JSON.parse(localStorage.getItem('twse_notes_v1') || '{}'); } catch(e){}
+function saveNotes() { try { localStorage.setItem('twse_notes_v1', JSON.stringify(allNotes)); } catch(e){} }
+
+function exportBackup() {
+  const backup = { version: 1, exported: new Date().toISOString(), data: allData, notes: allNotes };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `stock-tracker-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('備份已下載');
+}
+function importBackup(f) {
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const b = JSON.parse(e.target.result);
+      if (!Array.isArray(b.data)) throw new Error('bad format');
+      allData = b.data;
+      allNotes = b.notes || {};
+      save(); saveNotes(); updateTopbar(); renderDash();
+      toast(`已還原 ${allData.length} 筆資料`);
+      nav('dashboard', document.querySelectorAll('.nav-item')[0]);
+    } catch(err) { toast('備份檔案格式錯誤', false); }
+  };
+  r.readAsText(f, 'UTF-8');
+}
+
+// ── 連續上榜計算 ──
+function calcStreaks() {
+  const dates = [...new Set(allData.map(r => r.date))].sort();
+  if (!dates.length) return {};
+  const byDate = {};
+  dates.forEach(d => { byDate[d] = new Set(allData.filter(r => r.date === d).map(r => r.code)); });
+  const lastDate = dates[dates.length-1];
+  const streaks = {};
+  byDate[lastDate].forEach(code => {
+    let n = 0;
+    for (let i = dates.length-1; i >= 0; i--) {
+      if (byDate[dates[i]].has(code)) n++;
+      else break;
+    }
+    streaks[code] = n;
+  });
+  return streaks;
+}
+
+function toast(msg, ok=true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = ok ? '#1c1c1e' : '#ff3b30';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function getLatestDate() {
+  const dates = [...new Set(allData.map(r => r.date))].sort();
+  return dates[dates.length - 1] || today;
+}
+function getLatest() {
+  const d = getLatestDate();
+  return allData.filter(r => r.date === d).sort((a,b) => parseFloat(b.change) - parseFloat(a.change));
+}
+
+function updateTopbar() {
+  const rows = getLatest();
+  const d = getLatestDate();
+  document.getElementById('pageMeta').textContent = d.replace(/-/g,'/') + ' · ' + rows.length + ' 筆';
+  document.getElementById('rankBadge').textContent = rows.length;
+  document.getElementById('copyCSVBtn').style.display = rows.length ? 'flex' : 'none';
+}
+
+function nav(page, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + page).classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.getElementById('pageTitle').textContent = PAGES[page] || page;
+  updateTopbar();
+  if (page === 'dashboard') renderDash();
+  if (page === 'rank') renderRank();
+  if (page === 'sector') renderSector();
+  if (page === 'flow') renderFlow();
+  if (page === 'history') renderHistory();
+}
+
+// ── Dashboard ──
+function renderDash() {
+  const rows = getLatest();
+  const sc = {};
+  rows.forEach(r => { sc[r.sector] = (sc[r.sector]||0) + 1; });
+  const top = Object.entries(sc).sort((a,b) => b[1]-a[1])[0];
+  const avg = rows.length ? (rows.reduce((s,r) => s+parseFloat(r.change),0)/rows.length).toFixed(2) : '0';
+  const vol = rows.reduce((s,r) => s+parseInt(r.volume||0), 0);
+
+  document.getElementById('dashMetrics').innerHTML = `
+    <div class="metric-card">
+      <div class="metric-label">今日上榜</div>
+      <div class="metric-value">${rows.length}</div>
+      <div class="metric-sub">漲幅前 ${rows.length} 檔</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">平均漲幅</div>
+      <div class="metric-value" style="color:#1a7a35">+${avg}%</div>
+      <div class="metric-sub">全部平均</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">主攻產業</div>
+      <div class="metric-value" style="font-size:${top&&top[0].length>5?'14px':'18px'};line-height:1.4">${top?top[0]:'—'}</div>
+      <div class="metric-sub">${top?top[1]+' 檔':''}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">總成交量</div>
+      <div class="metric-value" style="font-size:20px">${(vol/1000).toFixed(0)}K</div>
+      <div class="metric-sub">張</div>
+    </div>`;
+
+  document.getElementById('top10meta').textContent = getLatestDate().replace(/-/g,'/');
+  const streaks = calcStreaks();
+  const volRank = [...rows].sort((a,b) => parseInt(b.volume||0)-parseInt(a.volume||0)).slice(0,5).map(r => r.code);
+  document.getElementById('top10body').innerHTML = rows.slice(0,10).map((r,i) => {
+    const [fc,bg] = getColor(r.sector);
+    const cls = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const streak = streaks[r.code] >= 2 ? `<span style="background:#fff3cd;color:#856404;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:5px">連${streaks[r.code]}日</span>` : '';
+    const fire = volRank.includes(r.code) ? ' <i class="ti ti-flame" style="color:#ff6b35;font-size:13px" title="量能前5"></i>' : '';
+    return `<tr>
+      <td><span class="rank-num ${cls}">${i+1}</span></td>
+      <td>${stockLink(r.code, `<div class="stock-name">${r.name}${streak}${fire}</div><div class="stock-code">${r.code}</div><span class="sector-tag sector-inline" style="background:${bg};color:${fc}">${r.sector}</span>`)}</td>
+      <td class="col-sector"><span class="sector-tag" style="background:${bg};color:${fc}">${r.sector}</span></td>
+      <td style="text-align:right;font-family:monospace;font-size:13px">${parseFloat(r.price).toFixed(2)}</td>
+      <td style="text-align:right"><span class="change-pill">▲${parseFloat(r.change).toFixed(2)}%</span></td>
+    </tr>`;
+  }).join('');
+
+  // 連續上榜清單（連2日以上，依天數排序）
+  const repeaters = rows.filter(r => streaks[r.code] >= 2)
+    .sort((a,b) => streaks[b.code] - streaks[a.code]);
+  const streakCard = document.getElementById('streakCard');
+  if (streakCard) {
+    streakCard.innerHTML = repeaters.length ? `
+      <div class="card-header"><span class="card-title"><i class="ti ti-repeat" style="color:#ff9f0a"></i> 連續上榜</span><span class="card-meta">${repeaters.length} 檔</span></div>
+      <div style="padding:6px 0">
+        ${repeaters.slice(0,8).map(r => {
+          const [fc,bg] = getColor(r.sector);
+          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 16px;border-bottom:1px solid #f5f5f7">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="background:#fff3cd;color:#856404;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;min-width:42px;text-align:center">連${streaks[r.code]}日</span>
+              ${stockLink(r.code, `<span class="stock-name" style="font-size:13px">${r.name}</span> <span class="stock-code">${r.code}</span>`)}
+            </div>
+            <span class="sector-tag" style="background:${bg};color:${fc}">${r.sector}</span>
+          </div>`;
+        }).join('')}
+      </div>` : `
+      <div class="card-header"><span class="card-title"><i class="ti ti-repeat" style="color:#ff9f0a"></i> 連續上榜</span></div>
+      <div style="padding:20px;text-align:center;color:#aeaeb2;font-size:13px">今日無連續上榜個股</div>`;
+  }
+
+  const maxC = Math.max(...Object.values(sc), 1);
+  document.getElementById('heatGrid').innerHTML = Object.entries(sc)
+    .sort((a,b) => b[1]-a[1])
+    .map(([s,c]) => {
+      const [fc,bg] = getColor(s);
+      return `<div class="heat-cell" style="background:${bg};border:1px solid ${fc}30" onclick="filterToRank('${s}')">
+        <div class="heat-cell-name" style="color:${fc}">${s}</div>
+        <div class="heat-cell-count" style="color:${fc}">${c}</div>
+      </div>`;
+    }).join('');
+}
+
+function filterToRank(sector) {
+  document.getElementById('sectorQ').value = sector;
+  nav('rank', document.querySelectorAll('.nav-item')[1]);
+}
+
+// ── Rank ──
+let rankSort = 'change', rankAsc = false;
+function sortRank(col) {
+  rankAsc = (rankSort === col) ? !rankAsc : (col==='name'||col==='code');
+  rankSort = col;
+  renderRank();
+}
+function renderRank() {
+  const rows = getLatest();
+  const sectors = [...new Set(rows.map(r => r.sector))].sort();
+  const sf = document.getElementById('sectorQ');
+  const curS = sf.value;
+  sf.innerHTML = '<option value="">全部產業</option>' + sectors.map(s =>
+    `<option value="${s}"${s===curS?' selected':''}>${s}</option>`).join('');
+
+  const q = document.getElementById('searchQ').value.toLowerCase();
+  let filtered = rows.filter(r =>
+    (!q || r.code.includes(q) || r.name.toLowerCase().includes(q)) &&
+    (!curS || r.sector === curS)
+  );
+  filtered.sort((a,b) => {
+    let va = a[rankSort], vb = b[rankSort];
+    if (['change','price','volume'].includes(rankSort)) { va = parseFloat(va); vb = parseFloat(vb); }
+    return rankAsc ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+  });
+
+  document.getElementById('rankBadge').textContent = filtered.length;
+  const empty = document.getElementById('rankEmpty');
+  if (!filtered.length) { empty.style.display=''; document.querySelector('#screen-rank table').style.display='none'; return; }
+  empty.style.display='none'; document.querySelector('#screen-rank table').style.display='';
+
+  const maxVol = Math.max(...filtered.map(r => parseInt(r.volume||0)), 1);
+  const streaks2 = calcStreaks();
+  const volRank2 = [...rows].sort((a,b) => parseInt(b.volume||0)-parseInt(a.volume||0)).slice(0,5).map(r => r.code);
+  document.getElementById('rankBody').innerHTML = filtered.map((r,i) => {
+    const [fc,bg] = getColor(r.sector);
+    const barW = Math.round(parseInt(r.volume||0)/maxVol*48);
+    const streak = streaks2[r.code] >= 2 ? `<span style="background:#fff3cd;color:#856404;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:5px">連${streaks2[r.code]}日</span>` : '';
+    const fire = volRank2.includes(r.code) ? ' <i class="ti ti-flame" style="color:#ff6b35;font-size:13px" title="量能前5"></i>' : '';
+    return `<tr>
+      <td style="color:#aeaeb2;font-size:12px">${i+1}</td>
+      <td>${stockLink(r.code, `<div class="stock-name">${r.name}${streak}${fire}</div><div class="stock-code">${r.code}</div><span class="sector-tag sector-inline" style="background:${bg};color:${fc}">${r.sector}</span>`)}</td>
+      <td class="col-sector"><span class="sector-tag" style="background:${bg};color:${fc}">${r.sector}</span></td>
+      <td style="text-align:right;font-family:monospace;font-size:13px">${parseFloat(r.price).toFixed(2)}</td>
+      <td style="text-align:right"><span class="change-pill">▲${parseFloat(r.change).toFixed(2)}%</span></td>
+      <td style="text-align:right;font-size:12px;color:#6e6e73">
+        <span class="vol-bar-bg"><span class="vol-bar-fill" style="width:${barW}px;background:${fc}55"></span></span>
+        ${Number(r.volume||0).toLocaleString()}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Sector ──
+let sectorMode = 'count';
+function setSectorMode(m) {
+  sectorMode = m;
+  const cBtn = document.getElementById('sectorModeCount');
+  const vBtn = document.getElementById('sectorModeVol');
+  cBtn.style.background = m==='count' ? '#1c1c1e' : '#f2f2f7';
+  cBtn.style.color = m==='count' ? '#fff' : '#1c1c1e';
+  vBtn.style.background = m==='vol' ? '#1c1c1e' : '#f2f2f7';
+  vBtn.style.color = m==='vol' ? '#fff' : '#1c1c1e';
+  renderSector();
+}
+function renderSector() {
+  const rows = getLatest();
+  const sm = {};
+  rows.forEach(r => {
+    if (!sm[r.sector]) sm[r.sector] = { count:0, tot:0, vol:0, best:null };
+    sm[r.sector].count++;
+    sm[r.sector].tot += parseFloat(r.change);
+    sm[r.sector].vol += parseInt(r.volume||0);
+    if (!sm[r.sector].best || parseFloat(r.change) > parseFloat(sm[r.sector].best.change))
+      sm[r.sector].best = r;
+  });
+  const key = sectorMode === 'vol' ? 'vol' : 'count';
+  const sorted = Object.entries(sm).sort((a,b) => b[1][key] - a[1][key]);
+  const max = sorted[0]?.[1][key] || 1;
+  document.getElementById('sectorDate').textContent = getLatestDate().replace(/-/g,'/');
+  document.getElementById('sectorBars').innerHTML = sorted.map(([s,v]) => {
+    const [fc] = getColor(s);
+    const avg = (v.tot/v.count).toFixed(2);
+    const valLabel = sectorMode === 'vol'
+      ? (v.vol >= 10000 ? (v.vol/10000).toFixed(1)+'萬' : v.vol.toLocaleString())
+      : v.count;
+    return `<div class="sector-bar-row">
+      <div class="sector-bar-label">${s}</div>
+      <div class="sector-bar-track"><div class="sector-bar-fill" style="width:${(v[key]/max*100).toFixed(0)}%;background:${fc}"></div></div>
+      <div class="sector-bar-count" style="width:${sectorMode==='vol'?'52px':'24px'}">${valLabel}</div>
+      <div class="sector-bar-avg">+${avg}%</div>
+    </div>`;
+  }).join('');
+  document.getElementById('leaderBody').innerHTML = sorted.map(([s,v]) => {
+    const [fc,bg] = getColor(s);
+    return `<tr>
+      <td><span class="sector-tag" style="background:${bg};color:${fc}">${s}</span></td>
+      <td>${stockLink(v.best.code, `<div class="stock-name">${v.best.name}</div><div class="stock-code">${v.best.code}</div>`)}</td>
+      <td style="text-align:right"><span class="change-pill">▲${parseFloat(v.best.change).toFixed(2)}%</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Flow (資金流向) ──
+function renderFlow() {
+  const dates = [...new Set(allData.map(r => r.date))].sort().slice(-7); // 最近7天
+  const tableEl = document.getElementById('flowTable');
+  const emptyEl = document.getElementById('flowEmpty');
+  const cardsEl = document.getElementById('flowCards');
+
+  if (dates.length < 2) {
+    tableEl.style.display = 'none';
+    cardsEl.innerHTML = '';
+    emptyEl.style.display = '';
+    document.getElementById('flowMeta').textContent = '';
+    return;
+  }
+  tableEl.style.display = '';
+  emptyEl.style.display = 'none';
+
+  // 建立 產業 × 日期 檔數矩陣
+  const matrix = {};
+  dates.forEach(d => {
+    allData.filter(r => r.date === d).forEach(r => {
+      if (!matrix[r.sector]) matrix[r.sector] = {};
+      matrix[r.sector][d] = (matrix[r.sector][d] || 0) + 1;
+    });
+  });
+
+  const lastD = dates[dates.length-1], prevD = dates[dates.length-2];
+  const sectors = Object.keys(matrix).sort((a,b) =>
+    ((matrix[b][lastD]||0) - (matrix[a][lastD]||0)) ||
+    ((matrix[b][prevD]||0) - (matrix[a][prevD]||0))
+  );
+
+  // 計算流入/流出
+  const deltas = sectors.map(s => ({
+    sector: s,
+    delta: (matrix[s][lastD]||0) - (matrix[s][prevD]||0),
+    now: matrix[s][lastD]||0,
+    prev: matrix[s][prevD]||0,
+  }));
+  const inflow = deltas.filter(d => d.delta > 0).sort((a,b) => b.delta - a.delta).slice(0,3);
+  const outflow = deltas.filter(d => d.delta < 0).sort((a,b) => a.delta - b.delta).slice(0,3);
+
+  cardsEl.innerHTML = `
+    <div class="metric-card" style="border-left:4px solid #34c759">
+      <div class="metric-label"><i class="ti ti-trending-up" style="color:#34c759"></i> 資金流入</div>
+      ${inflow.length ? inflow.map(d => {
+        const [fc,bg] = getColor(d.sector);
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0">
+          <span class="sector-tag" style="background:${bg};color:${fc}">${d.sector}</span>
+          <span style="font-size:13px;font-weight:700;color:#1a7a35">${d.prev} → ${d.now} 檔 (+${d.delta})</span>
+        </div>`;
+      }).join('') : '<div style="font-size:13px;color:#aeaeb2;padding:8px 0">無明顯流入</div>'}
+    </div>
+    <div class="metric-card" style="border-left:4px solid #ff3b30">
+      <div class="metric-label"><i class="ti ti-trending-down" style="color:#ff3b30"></i> 資金流出</div>
+      ${outflow.length ? outflow.map(d => {
+        const [fc,bg] = getColor(d.sector);
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0">
+          <span class="sector-tag" style="background:${bg};color:${fc}">${d.sector}</span>
+          <span style="font-size:13px;font-weight:700;color:#a32d2d">${d.prev} → ${d.now} 檔 (${d.delta})</span>
+        </div>`;
+      }).join('') : '<div style="font-size:13px;color:#aeaeb2;padding:8px 0">無明顯流出</div>'}
+    </div>`;
+
+  document.getElementById('flowMeta').textContent = `${prevD.replace(/-/g,'/')} vs ${lastD.replace(/-/g,'/')}`;
+
+  // 表頭
+  document.getElementById('flowHead').innerHTML = `<tr>
+    <th>產業別</th>
+    ${dates.map(d => `<th class="right">${d.slice(5).replace('-','/')}</th>`).join('')}
+    <th class="right">變化</th>
+  </tr>`;
+
+  // 表格內容（點擊產業列可展開個股明細）
+  const colCount = dates.length + 2;
+  document.getElementById('flowBody').innerHTML = sectors.map((s, idx) => {
+    const [fc,bg] = getColor(s);
+    const delta = (matrix[s][lastD]||0) - (matrix[s][prevD]||0);
+    const deltaHtml = delta > 0
+      ? `<span style="color:#1a7a35;font-weight:700">▲${delta}</span>`
+      : delta < 0
+        ? `<span style="color:#a32d2d;font-weight:700">▼${Math.abs(delta)}</span>`
+        : `<span style="color:#aeaeb2">—</span>`;
+
+    // 個股明細：新進 / 續留 / 退出
+    const lastStocks = allData.filter(r => r.date === lastD && r.sector === s);
+    const prevStocks = allData.filter(r => r.date === prevD && r.sector === s);
+    const prevCodes = new Set(prevStocks.map(r => r.code));
+    const lastCodes = new Set(lastStocks.map(r => r.code));
+    const fresh = lastStocks.filter(r => !prevCodes.has(r.code)).sort((a,b)=>parseFloat(b.change)-parseFloat(a.change));
+    const stay  = lastStocks.filter(r => prevCodes.has(r.code)).sort((a,b)=>parseFloat(b.change)-parseFloat(a.change));
+    const out   = prevStocks.filter(r => !lastCodes.has(r.code)).sort((a,b)=>parseFloat(b.change)-parseFloat(a.change));
+
+    const chip = (r, type) => {
+      const styles = {
+        fresh: 'background:#e8f8ed;border:1px solid #34c75940;color:#1a7a35',
+        stay:  'background:#f2f2f7;border:1px solid #d1d1d6;color:#3a3a3c',
+        out:   'background:#ffe5e4;border:1px solid #ff3b3040;color:#a32d2d;opacity:0.8'
+      };
+      return stockLink(r.code, `<span style="display:inline-flex;align-items:center;gap:4px;${styles[type]};font-size:12px;font-weight:600;padding:4px 10px;border-radius:8px;margin:3px">
+        ${r.name} <span style="font-family:monospace;font-size:10px;opacity:0.7">${r.code}</span>
+        <span style="font-size:11px">+${parseFloat(r.change).toFixed(2)}%</span>
+      </span>`);
+    };
+
+    const detailHtml = `
+      ${fresh.length ? `<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:700;color:#1a7a35;margin-bottom:4px"><i class="ti ti-arrow-bar-to-up"></i> 新進榜（${fresh.length}）</div><div style="display:flex;flex-wrap:wrap">${fresh.map(r=>chip(r,'fresh')).join('')}</div></div>` : ''}
+      ${stay.length ? `<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:700;color:#6e6e73;margin-bottom:4px"><i class="ti ti-repeat"></i> 續留榜上（${stay.length}）</div><div style="display:flex;flex-wrap:wrap">${stay.map(r=>chip(r,'stay')).join('')}</div></div>` : ''}
+      ${out.length ? `<div><div style="font-size:11px;font-weight:700;color:#a32d2d;margin-bottom:4px"><i class="ti ti-arrow-bar-to-down"></i> 退出榜外（${out.length}，顯示前日漲幅）</div><div style="display:flex;flex-wrap:wrap">${out.map(r=>chip(r,'out')).join('')}</div></div>` : ''}
+      ${!fresh.length && !stay.length && !out.length ? '<span style="font-size:12px;color:#aeaeb2">無資料</span>' : ''}
+    `;
+
+    return `<tr onclick="toggleFlowDetail(${idx})" style="cursor:pointer">
+      <td><i class="ti ti-chevron-right" id="fdArrow-${idx}" style="font-size:12px;color:#aeaeb2;transition:transform 0.15s;margin-right:4px"></i><span class="sector-tag" style="background:${bg};color:${fc}">${s}</span></td>
+      ${dates.map(d => {
+        const c = matrix[s][d] || 0;
+        const maxInRow = Math.max(...dates.map(dd => matrix[s][dd]||0), 1);
+        const op = c ? (0.25 + 0.75 * c / maxInRow).toFixed(2) : 0;
+        return `<td style="text-align:right">
+          ${c ? `<span style="display:inline-block;min-width:26px;text-align:center;background:${fc};opacity:${op};color:#fff;font-weight:700;font-size:12px;padding:2px 6px;border-radius:6px">${c}</span>` : '<span style="color:#d1d1d6">·</span>'}
+        </td>`;
+      }).join('')}
+      <td style="text-align:right">${deltaHtml}</td>
+    </tr>
+    <tr id="fdRow-${idx}" style="display:none">
+      <td colspan="${colCount}" style="background:#fafafa;padding:12px 16px">${detailHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleFlowDetail(idx) {
+  const row = document.getElementById('fdRow-' + idx);
+  const arrow = document.getElementById('fdArrow-' + idx);
+  const open = row.style.display === 'none';
+  row.style.display = open ? '' : 'none';
+  arrow.style.transform = open ? 'rotate(90deg)' : '';
+}
+
+// ── History ──
+function renderHistory() {
+  const dates = [...new Set(allData.map(r => r.date))].sort().reverse();
+  document.getElementById('histCount').textContent = dates.length + ' 天';
+  if (!dates.length) {
+    document.getElementById('histEmpty').style.display = '';
+    document.getElementById('histBody').innerHTML = '';
+    return;
+  }
+  document.getElementById('histEmpty').style.display = 'none';
+  document.getElementById('histBody').innerHTML = dates.map(d => {
+    const rows = allData.filter(r => r.date === d);
+    const avg = (rows.reduce((s,r) => s+parseFloat(r.change),0)/rows.length).toFixed(2);
+    const sectors = [...new Set(rows.map(r => r.sector))];
+    const note = allNotes[d] || '';
+    return `<div class="history-row" style="flex-direction:column;align-items:stretch;gap:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div class="history-date">${d.replace(/-/g,'/')}</div>
+          <div class="history-meta">${rows.length} 檔 · 均漲 +${avg}% · ${sectors.length} 個產業</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          ${sectors.slice(0,3).map(s => {
+            const [fc,bg] = getColor(s);
+            return `<span class="sector-tag" style="background:${bg};color:${fc}">${s}</span>`;
+          }).join('')}
+          ${sectors.length>3 ? `<span style="font-size:11px;color:#aeaeb2">+${sectors.length-3}</span>` : ''}
+          <button onclick="event.stopPropagation();editNote('${d}')"
+            style="border:none;background:none;cursor:pointer;color:#0a84ff;font-size:16px;padding:0 4px;line-height:1" title="編輯筆記">
+            <i class="ti ti-pencil"></i>
+          </button>
+          <button onclick="event.stopPropagation();delDate('${d}')"
+            style="border:none;background:none;cursor:pointer;color:#aeaeb2;font-size:18px;padding:0 4px;line-height:1">
+            <i class="ti ti-trash"></i>
+          </button>
+        </div>
+      </div>
+      ${note ? `<div style="background:#fffbe5;border-left:3px solid #ffd60a;border-radius:6px;padding:8px 12px;font-size:12px;color:#5a5a00;line-height:1.6"><i class="ti ti-note" style="margin-right:4px"></i>${note}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+function editNote(d) {
+  const cur = allNotes[d] || '';
+  const txt = prompt(`${d} 盤面筆記：\n（例如：記憶體噴出、營建熄火、量能爆增）`, cur);
+  if (txt === null) return;
+  if (txt.trim()) allNotes[d] = txt.trim();
+  else delete allNotes[d];
+  saveNotes();
+  renderHistory();
+  toast('筆記已儲存');
+}
+function delDate(d) {
+  if (!confirm(`確定刪除 ${d} 的記錄？`)) return;
+  allData = allData.filter(r => r.date !== d);
+  save(); renderHistory(); updateTopbar();
+  toast('已刪除 ' + d);
+}
+
+// ── Import ──
+function parseCsv(text, date) {
+  const lines = text.trim().split('\n').filter(l => l.trim());
+  const start = isNaN(parseFloat(lines[0]?.split(',')[0])) ? 1 : 0;
+  return lines.slice(start).map(l => {
+    const p = l.split(',').map(s => s.trim().replace(/^"|"$/g,''));
+    if (p.length < 5) return null;
+    return { code:p[0], name:p[1], sector:p[2]||'其他', price:p[3]||'0', change:p[4]||'0', volume:p[5]||'0', date };
+  }).filter(Boolean);
+}
+function importRows(rows, date) {
+  const msg = document.getElementById('importMsg');
+  if (!rows.length) { msg.style.color='var(--danger)'; msg.textContent='⚠ 找不到有效資料'; return; }
+  allData = allData.filter(r => r.date !== date).concat(rows);
+  save(); updateTopbar();
+  msg.style.color='#1a7a35'; msg.textContent=`✓ 已匯入 ${rows.length} 筆（${date}）`;
+  toast(`已匯入 ${rows.length} 筆資料`);
+  setTimeout(() => nav('dashboard', document.querySelectorAll('.nav-item')[0]), 800);
+}
+function importCSV() {
+  const text = document.getElementById('csvPaste').value.trim();
+  const date = document.getElementById('importDate').value || today;
+  if (text) importRows(parseCsv(text, date), date);
+}
+function handleFile(f) {
+  const date = document.getElementById('importDate').value || today;
+  const r = new FileReader();
+  r.onload = e => importRows(parseCsv(e.target.result, date), date);
+  r.readAsText(f, 'UTF-8');
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+}
+
+// ── Copy CSV ──
+function copyLatestCSV() {
+  const rows = getLatest();
+  const header = '代號,名稱,產業別,收盤價,漲跌%,成交量';
+  const body = rows.map(r => `${r.code},${r.name},${r.sector},${r.price},${r.change},${r.volume}`).join('\n');
+  navigator.clipboard.writeText(header + '\n' + body)
+    .then(() => toast('CSV 已複製到剪貼簿'))
+    .catch(() => toast('複製失敗，請手動選取', false));
+}
+
+// ── Auto fetch ──
+async function tryFetch() {
+  const btn = document.getElementById('fetchBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> 抓取中...';
+  try {
+    const [r1, r2] = await Promise.all([
+      fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL'),
+      fetch('https://openapi.twse.com.tw/v1/opendata/t187ap03_L')
+    ]);
+    const [raw, basics] = await Promise.all([r1.json(), r2.json()]);
+    const SMAP = {'01':'水泥工業','02':'食品工業','03':'塑膠工業','04':'紡織纖維','05':'電機機械','06':'電器電纜','08':'玻璃陶瓷','09':'造紙工業','10':'鋼鐵工業','11':'橡膠工業','12':'汽車工業','14':'建材營造','15':'航運業','16':'觀光餐旅','17':'金融保險業','18':'貿易百貨','19':'綜合','20':'其他','21':'化學工業','22':'生技醫療業','23':'油電燃氣業','24':'半導體業','25':'電腦及週邊設備業','26':'光電業','27':'通信網路業','28':'電子零組件業','29':'電子通路業','30':'資訊服務業','31':'其他電子業','32':'文化創意業','33':'農業科技','34':'電子商務'};
+    const sm = {};
+    basics.forEach(b => { if (b['公司代號']) sm[b['公司代號']] = b['產業別']||'20'; });
+    const d = new Date().toISOString().slice(0,10);
+    const rows = raw
+      .filter(r => r.ClosingPrice && r.Change && r.ClosingPrice !== '--' && r.Change !== '--')
+      .map(r => {
+        const c = parseFloat(r.ClosingPrice.replace(/,/g,'')), ch = parseFloat(r.Change.replace(/,/g,''));
+        const prev = c - ch;
+        const pct = prev !== 0 ? (ch/prev*100) : 0;
+        return { code:r.Code, name:r.Name, sector:SMAP[sm[r.Code]||'20']||'其他',
+          price:c.toFixed(2), change:pct.toFixed(2),
+          volume: r.TradeVolume ? Math.round(parseInt(r.TradeVolume.replace(/,/g,''))/1000).toString() : '0',
+          date: d };
+      })
+      .sort((a,b) => parseFloat(b.change)-parseFloat(a.change))
+      .slice(0,50);
+    importRows(rows, d);
+  } catch(e) {
+    toast('自動抓取失敗（CORS），請手動上傳 CSV', false);
+    nav('import', null);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-refresh"></i> 自動抓取';
+  }
+}
+
+// Init
+updateTopbar();
+renderDash();
+</script>
+</body>
+</html>
