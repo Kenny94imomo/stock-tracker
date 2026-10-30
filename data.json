@@ -1,407 +1,407 @@
 {
-  "date": "2026-10-29",
-  "updated": "2026-10-29T13:22:22.212Z",
+  "date": "2026-10-30",
+  "updated": "2026-10-30T13:13:53.267Z",
   "count": 50,
   "data": [
     {
-      "code": "2444",
-      "name": "兆勁",
-      "sector": "通信網路業",
-      "price": "15.95",
+      "code": "3321",
+      "name": "同泰",
+      "sector": "電子零組件業",
+      "price": "21.45",
       "change": "10.00",
-      "volume": "2496"
-    },
-    {
-      "code": "3432",
-      "name": "台端",
-      "sector": "電子零組件業",
-      "price": "13.75",
-      "change": "10.00",
-      "volume": "86"
-    },
-    {
-      "code": "4977",
-      "name": "眾達-KY",
-      "sector": "通信網路業",
-      "price": "187.00",
-      "change": "10.00",
-      "volume": "7258"
-    },
-    {
-      "code": "6225",
-      "name": "天瀚",
-      "sector": "光電業",
-      "price": "85.80",
-      "change": "10.00",
-      "volume": "256"
-    },
-    {
-      "code": "2355",
-      "name": "敬鵬",
-      "sector": "電子零組件業",
-      "price": "54.50",
-      "change": "9.99",
-      "volume": "9646"
-    },
-    {
-      "code": "3189",
-      "name": "景碩",
-      "sector": "半導體業",
-      "price": "1035.00",
-      "change": "9.99",
-      "volume": "18392"
-    },
-    {
-      "code": "6226",
-      "name": "光鼎",
-      "sector": "光電業",
-      "price": "39.65",
-      "change": "9.99",
-      "volume": "4213"
-    },
-    {
-      "code": "3006",
-      "name": "晶豪科",
-      "sector": "半導體業",
-      "price": "275.50",
-      "change": "9.98",
-      "volume": "19330"
-    },
-    {
-      "code": "4526",
-      "name": "東台",
-      "sector": "電機機械",
-      "price": "49.65",
-      "change": "9.97",
-      "volume": "74182"
-    },
-    {
-      "code": "3443",
-      "name": "創意",
-      "sector": "半導體業",
-      "price": "8170.00",
-      "change": "9.96",
-      "volume": "1644"
-    },
-    {
-      "code": "4927",
-      "name": "泰鼎-KY",
-      "sector": "電子零組件業",
-      "price": "56.30",
-      "change": "9.96",
-      "volume": "9846"
-    },
-    {
-      "code": "4960",
-      "name": "誠美材",
-      "sector": "光電業",
-      "price": "34.80",
-      "change": "9.95",
-      "volume": "13374"
-    },
-    {
-      "code": "6715",
-      "name": "嘉基",
-      "sector": "電子零組件業",
-      "price": "480.50",
-      "change": "9.95",
-      "volume": "738"
-    },
-    {
-      "code": "3605",
-      "name": "宏致",
-      "sector": "電子零組件業",
-      "price": "171.50",
-      "change": "9.94",
-      "volume": "9314"
-    },
-    {
-      "code": "3701",
-      "name": "大眾控",
-      "sector": "電腦及週邊設備業",
-      "price": "57.50",
-      "change": "9.94",
-      "volume": "3398"
-    },
-    {
-      "code": "2466",
-      "name": "冠西電",
-      "sector": "光電業",
-      "price": "315.50",
-      "change": "9.93",
-      "volume": "1733"
-    },
-    {
-      "code": "2491",
-      "name": "吉祥全",
-      "sector": "光電業",
-      "price": "40.40",
-      "change": "9.93",
-      "volume": "1374"
-    },
-    {
-      "code": "6533",
-      "name": "晶心科",
-      "sector": "半導體業",
-      "price": "293.50",
-      "change": "9.93",
-      "volume": "1147"
+      "volume": "3355"
     },
     {
       "code": "3035",
       "name": "智原",
       "sector": "半導體業",
-      "price": "210.50",
-      "change": "9.92",
-      "volume": "2678"
+      "price": "231.50",
+      "change": "9.98",
+      "volume": "35583"
     },
     {
-      "code": "3406",
-      "name": "玉晶光",
-      "sector": "光電業",
-      "price": "1330.00",
-      "change": "9.92",
-      "volume": "5456"
+      "code": "1786",
+      "name": "科妍",
+      "sector": "生技醫療業",
+      "price": "43.25",
+      "change": "9.91",
+      "volume": "226"
     },
     {
-      "code": "4956",
-      "name": "光鋐",
-      "sector": "光電業",
-      "price": "41.00",
-      "change": "9.92",
-      "volume": "2492"
-    },
-    {
-      "code": "6456",
-      "name": "GIS-KY",
-      "sector": "光電業",
-      "price": "107.50",
-      "change": "9.92",
-      "volume": "33530"
-    },
-    {
-      "code": "9136",
-      "name": "巨騰-DR",
-      "sector": "其他",
-      "price": "7.87",
-      "change": "9.92",
-      "volume": "455"
-    },
-    {
-      "code": "6756",
-      "name": "威鋒電子",
-      "sector": "半導體業",
-      "price": "133.50",
+      "code": "2352",
+      "name": "佳世達",
+      "sector": "電腦及週邊設備業",
+      "price": "32.80",
       "change": "9.88",
-      "volume": "899"
+      "volume": "87290"
     },
     {
-      "code": "2455",
-      "name": "全新",
-      "sector": "通信網路業",
-      "price": "512.00",
-      "change": "9.87",
-      "volume": "9704"
-    },
-    {
-      "code": "6168",
-      "name": "宏齊",
-      "sector": "光電業",
-      "price": "37.30",
-      "change": "9.87",
-      "volume": "5762"
-    },
-    {
-      "code": "6668",
-      "name": "中揚光",
-      "sector": "光電業",
-      "price": "57.90",
-      "change": "9.87",
-      "volume": "4997"
-    },
-    {
-      "code": "1560",
-      "name": "中砂",
-      "sector": "電機機械",
-      "price": "914.00",
-      "change": "9.86",
-      "volume": "2408"
-    },
-    {
-      "code": "3094",
-      "name": "聯傑",
-      "sector": "半導體業",
-      "price": "55.70",
-      "change": "9.86",
-      "volume": "2185"
-    },
-    {
-      "code": "3321",
-      "name": "同泰",
+      "code": "3432",
+      "name": "台端",
       "sector": "電子零組件業",
-      "price": "19.50",
-      "change": "9.86",
-      "volume": "526"
-    },
-    {
-      "code": "6415",
-      "name": "矽力*-KY",
-      "sector": "半導體業",
-      "price": "525.00",
-      "change": "9.83",
-      "volume": "7419"
-    },
-    {
-      "code": "2368",
-      "name": "金像電",
-      "sector": "電子零組件業",
-      "price": "1185.00",
-      "change": "9.72",
-      "volume": "7541"
-    },
-    {
-      "code": "2424",
-      "name": "隴華",
-      "sector": "通信網路業",
-      "price": "13.55",
-      "change": "9.72",
-      "volume": "68"
+      "price": "15.10",
+      "change": "9.82",
+      "volume": "130"
     },
     {
       "code": "2465",
       "name": "麗臺",
       "sector": "電腦及週邊設備業",
-      "price": "103.00",
-      "change": "9.69",
-      "volume": "7132"
+      "price": "113.00",
+      "change": "9.71",
+      "volume": "9438"
     },
     {
-      "code": "6108",
-      "name": "競國",
-      "sector": "電子零組件業",
-      "price": "34.00",
-      "change": "9.68",
-      "volume": "6842"
+      "code": "6873",
+      "name": "泓德能源",
+      "sector": "綠能環保",
+      "price": "50.00",
+      "change": "7.41",
+      "volume": "3711"
     },
     {
-      "code": "6805",
-      "name": "富世達",
-      "sector": "電子零組件業",
-      "price": "2460.00",
-      "change": "9.33",
-      "volume": "1187"
-    },
-    {
-      "code": "3149",
-      "name": "正達",
+      "code": "2491",
+      "name": "吉祥全",
       "sector": "光電業",
-      "price": "72.50",
-      "change": "9.02",
-      "volume": "5899"
+      "price": "43.15",
+      "change": "6.81",
+      "volume": "4184"
     },
     {
-      "code": "3653",
-      "name": "健策",
+      "code": "2426",
+      "name": "鼎元",
+      "sector": "光電業",
+      "price": "97.00",
+      "change": "6.36",
+      "volume": "45629"
+    },
+    {
+      "code": "9136",
+      "name": "巨騰-DR",
+      "sector": "其他",
+      "price": "8.37",
+      "change": "6.35",
+      "volume": "552"
+    },
+    {
+      "code": "4526",
+      "name": "東台",
+      "sector": "電機機械",
+      "price": "52.80",
+      "change": "6.34",
+      "volume": "109029"
+    },
+    {
+      "code": "2492",
+      "name": "華新科",
       "sector": "電子零組件業",
-      "price": "6375.00",
-      "change": "8.79",
-      "volume": "2172"
+      "price": "423.00",
+      "change": "6.28",
+      "volume": "55795"
     },
     {
-      "code": "3661",
-      "name": "世芯-KY",
+      "code": "1201",
+      "name": "味全",
+      "sector": "食品工業",
+      "price": "12.35",
+      "change": "5.56",
+      "volume": "3622"
+    },
+    {
+      "code": "4562",
+      "name": "穎漢",
+      "sector": "電機機械",
+      "price": "32.30",
+      "change": "5.38",
+      "volume": "1147"
+    },
+    {
+      "code": "7730",
+      "name": "暉盛-創",
       "sector": "半導體業",
-      "price": "3800.00",
-      "change": "8.73",
-      "volume": "1874"
+      "price": "249.50",
+      "change": "5.27",
+      "volume": "371"
     },
     {
-      "code": "6467",
-      "name": "泰合",
+      "code": "6719",
+      "name": "力智",
+      "sector": "半導體業",
+      "price": "190.00",
+      "change": "5.26",
+      "volume": "3029"
+    },
+    {
+      "code": "00897",
+      "name": "富邦基因免疫生技",
+      "sector": "其他",
+      "price": "14.89",
+      "change": "4.71",
+      "volume": "4751"
+    },
+    {
+      "code": "00898",
+      "name": "國泰基因免疫革命",
+      "sector": "其他",
+      "price": "12.37",
+      "change": "4.48",
+      "volume": "3427"
+    },
+    {
+      "code": "7750",
+      "name": "新代",
+      "sector": "電機機械",
+      "price": "2090.00",
+      "change": "4.24",
+      "volume": "571"
+    },
+    {
+      "code": "4155",
+      "name": "訊映",
       "sector": "生技醫療業",
-      "price": "220.50",
-      "change": "8.35",
-      "volume": "822"
+      "price": "17.05",
+      "change": "3.96",
+      "volume": "1093"
     },
     {
-      "code": "6526",
-      "name": "達發",
+      "code": "4994",
+      "name": "傳奇",
+      "sector": "資訊服務業",
+      "price": "84.30",
+      "change": "3.95",
+      "volume": "28"
+    },
+    {
+      "code": "2892",
+      "name": "第一金",
+      "sector": "金融保險業",
+      "price": "44.45",
+      "change": "3.86",
+      "volume": "37168"
+    },
+    {
+      "code": "00678",
+      "name": "群益那斯達克生技",
+      "sector": "其他",
+      "price": "46.26",
+      "change": "3.72",
+      "volume": "1637"
+    },
+    {
+      "code": "6155",
+      "name": "鈞寶",
+      "sector": "電子零組件業",
+      "price": "70.50",
+      "change": "3.68",
+      "volume": "5473"
+    },
+    {
+      "code": "6446",
+      "name": "藥華藥",
+      "sector": "生技醫療業",
+      "price": "1240.00",
+      "change": "3.33",
+      "volume": "2113"
+    },
+    {
+      "code": "2424",
+      "name": "隴華",
+      "sector": "通信網路業",
+      "price": "14.00",
+      "change": "3.32",
+      "volume": "208"
+    },
+    {
+      "code": "2421",
+      "name": "建準",
+      "sector": "電子零組件業",
+      "price": "159.50",
+      "change": "3.24",
+      "volume": "2654"
+    },
+    {
+      "code": "3055",
+      "name": "蔚華科",
+      "sector": "電子通路業",
+      "price": "145.50",
+      "change": "3.19",
+      "volume": "2527"
+    },
+    {
+      "code": "6949",
+      "name": "沛爾生醫*-創",
+      "sector": "生技醫療業",
+      "price": "40.80",
+      "change": "2.90",
+      "volume": "2957"
+    },
+    {
+      "code": "3047",
+      "name": "訊舟",
+      "sector": "通信網路業",
+      "price": "14.65",
+      "change": "2.81",
+      "volume": "4494"
+    },
+    {
+      "code": "6796",
+      "name": "晉弘",
+      "sector": "生技醫療業",
+      "price": "53.00",
+      "change": "2.71",
+      "volume": "52"
+    },
+    {
+      "code": "00653L",
+      "name": "富邦印度正2",
+      "sector": "其他",
+      "price": "41.50",
+      "change": "2.62",
+      "volume": "300"
+    },
+    {
+      "code": "3006",
+      "name": "晶豪科",
       "sector": "半導體業",
-      "price": "803.00",
-      "change": "8.22",
-      "volume": "1006"
+      "price": "282.50",
+      "change": "2.54",
+      "volume": "30718"
+    },
+    {
+      "code": "3040",
+      "name": "遠見",
+      "sector": "其他",
+      "price": "30.50",
+      "change": "2.52",
+      "volume": "142"
+    },
+    {
+      "code": "4967",
+      "name": "十銓",
+      "sector": "半導體業",
+      "price": "286.50",
+      "change": "2.50",
+      "volume": "12014"
+    },
+    {
+      "code": "1736",
+      "name": "喬山",
+      "sector": "運動休閒",
+      "price": "123.50",
+      "change": "2.49",
+      "volume": "1010"
+    },
+    {
+      "code": "4137",
+      "name": "麗豐-KY",
+      "sector": "生技醫療業",
+      "price": "81.20",
+      "change": "2.27",
+      "volume": "393"
+    },
+    {
+      "code": "4771",
+      "name": "望隼",
+      "sector": "生技醫療業",
+      "price": "212.00",
+      "change": "2.17",
+      "volume": "299"
     },
     {
       "code": "6152",
       "name": "百一",
       "sector": "通信網路業",
-      "price": "18.50",
-      "change": "8.19",
-      "volume": "2693"
+      "price": "18.90",
+      "change": "2.16",
+      "volume": "4950"
     },
     {
-      "code": "8996",
-      "name": "高力",
-      "sector": "電機機械",
-      "price": "1585.00",
-      "change": "8.19",
-      "volume": "3630"
-    },
-    {
-      "code": "2408",
-      "name": "南亞科",
-      "sector": "半導體業",
-      "price": "477.00",
-      "change": "8.16",
-      "volume": "46448"
-    },
-    {
-      "code": "6830",
-      "name": "汎銓",
-      "sector": "其他電子業",
-      "price": "507.00",
-      "change": "8.10",
-      "volume": "913"
-    },
-    {
-      "code": "5284",
-      "name": "jpp-KY",
+      "code": "1443",
+      "name": "立益物流",
       "sector": "其他",
-      "price": "287.50",
-      "change": "7.68",
-      "volume": "626"
+      "price": "23.90",
+      "change": "2.14",
+      "volume": "4"
     },
     {
-      "code": "2363",
-      "name": "矽統",
-      "sector": "半導體業",
-      "price": "55.70",
-      "change": "7.53",
-      "volume": "5805"
+      "code": "3026",
+      "name": "禾伸堂",
+      "sector": "電子零組件業",
+      "price": "767.00",
+      "change": "2.13",
+      "volume": "7027"
     },
     {
-      "code": "3437",
-      "name": "榮創",
+      "code": "00686R",
+      "name": "群益臺灣加權反1",
+      "sector": "其他",
+      "price": "0.97",
+      "change": "2.11",
+      "volume": "7636"
+    },
+    {
+      "code": "2466",
+      "name": "冠西電",
       "sector": "光電業",
-      "price": "20.15",
-      "change": "7.47",
-      "volume": "2015"
+      "price": "322.00",
+      "change": "2.06",
+      "volume": "11107"
     },
     {
-      "code": "2342",
-      "name": "茂矽",
-      "sector": "半導體業",
-      "price": "42.65",
-      "change": "7.43",
-      "volume": "1697"
+      "code": "6934",
+      "name": "心誠鎂",
+      "sector": "生技醫療業",
+      "price": "84.50",
+      "change": "2.05",
+      "volume": "52"
     },
     {
-      "code": "7710",
-      "name": "東擎科技",
-      "sector": "電腦及週邊設備業",
-      "price": "138.00",
-      "change": "7.39",
-      "volume": "1189"
+      "code": "7835",
+      "name": "永悅健康-創",
+      "sector": "數位雲端",
+      "price": "17.40",
+      "change": "2.05",
+      "volume": "2"
+    },
+    {
+      "code": "00852L",
+      "name": "國泰美國道瓊正2",
+      "sector": "其他",
+      "price": "34.74",
+      "change": "2.03",
+      "volume": "217"
+    },
+    {
+      "code": "2033",
+      "name": "佳大",
+      "sector": "鋼鐵工業",
+      "price": "69.80",
+      "change": "1.90",
+      "volume": "2682"
+    },
+    {
+      "code": "00632R",
+      "name": "元大台灣50反1",
+      "sector": "其他",
+      "price": "9.85",
+      "change": "1.86",
+      "volume": "101281"
+    },
+    {
+      "code": "2801",
+      "name": "彰銀",
+      "sector": "金融保險業",
+      "price": "30.50",
+      "change": "1.84",
+      "volume": "18041"
+    },
+    {
+      "code": "7812",
+      "name": "稜研科技*-創",
+      "sector": "通信網路業",
+      "price": "61.90",
+      "change": "1.81",
+      "volume": "111"
     }
   ]
 }
